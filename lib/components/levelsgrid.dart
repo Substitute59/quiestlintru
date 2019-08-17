@@ -1,19 +1,17 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../helpers/arguments.dart';
 import '../models/user.dart';
+import '../models/level.dart';
 
 class Levelsgrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: DefaultAssetBundle
-        .of(context)
-        .loadString('lib/datas/datas.json'),
+      future: getLevels(),
       builder: (context, snapshot) {
         // Decode the JSON
-        var newData = json.decode(snapshot.data.toString());
+        var newData = snapshot.data;
 
         return FutureBuilder(
           future: getUsers(),
@@ -31,18 +29,21 @@ class Levelsgrid extends StatelessWidget {
                       crossAxisSpacing: 5.0,
                     ),
                     delegate: SliverChildBuilderDelegate(
-                          (BuildContext context, int index) {
+                      (BuildContext context, int index) {
+                        var currentLevel = users != null ? users[0].level : 1;
+
                         return Container(
                           child: RawMaterialButton(
                             shape: CircleBorder(),
-                            fillColor: users[0].level > index ? Colors.blue : Colors.grey,
+                            fillColor: currentLevel > index ? Colors.blue : Colors.grey,
                             onPressed: () {
-                              if(users[0].level > index) {
+                              if(currentLevel > index) {
                                 Navigator.pushNamed(
                                   context,
                                   '/game',
                                   arguments: GameArguments(
                                     index+1,
+                                    users[0].id,
                                   ),
                                 );
                               } else {
@@ -75,7 +76,7 @@ class Levelsgrid extends StatelessWidget {
                           ),
                         );
                       },
-                      childCount: newData.length,
+                      childCount: newData != null ? newData.length : 0,
                     ),
                   ),
                 ),

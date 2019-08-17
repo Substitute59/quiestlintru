@@ -14,6 +14,8 @@ Future<void> insertUser(User user) async {
     user.toMap(),
     conflictAlgorithm: ConflictAlgorithm.replace,
   );
+
+  db.close();
 }
 
 Future<List<User>> getUsers() async {
@@ -29,15 +31,29 @@ Future<List<User>> getUsers() async {
 
   final Database db = await database;
 
-  final List<Map<String, dynamic>> maps = await db.query('users');
+  executeQuery(db) {
+    if(!db.isClosed) {
+      return db.query('users');
+    } else {
+      return null;
+    }
+  }
 
-  return List.generate(maps.length, (i) {
-    return User(
-      id: maps[i]['id'],
-      name: maps[i]['name'],
-      level: maps[i]['level'],
-    );
-  });
+  final List<Map<String, dynamic>> maps = await executeQuery(db);
+
+  db.close();
+
+  if(maps != null) {
+    return List.generate(maps.length, (i) {
+      return User(
+        id: maps[i]['id'],
+        name: maps[i]['name'],
+        level: maps[i]['level'],
+      );
+    });
+  } else {
+    return null;
+  }
 }
 
 Future<void> updateUser(User user) async {
@@ -53,6 +69,8 @@ Future<void> updateUser(User user) async {
     where: "id = ?",
     whereArgs: [user.id],
   );
+
+  db.close();
 }
 
 Future<void> deleteUser(int id) async {
@@ -67,6 +85,8 @@ Future<void> deleteUser(int id) async {
     where: "id = ?",
     whereArgs: [id],
   );
+
+  db.close();
 }
 
 class User {

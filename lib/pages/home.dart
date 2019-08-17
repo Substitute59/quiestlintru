@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 
 import '../helpers/arguments.dart';
@@ -13,6 +17,32 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final _formKey = GlobalKey<FormState>();
   final userName = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _updateGameDb();
+  }
+
+  _updateGameDb() async {
+    var databasesPath = await getDatabasesPath();
+    var path = join(databasesPath, 'levels_database.db');
+
+    // delete existing if any
+    await deleteDatabase(path);
+
+    // Make sure the parent directory exists
+    try {
+      await Directory(dirname(path)).create(recursive: true);
+    } catch (_) {}
+
+    // Copy from asset
+    ByteData data = await rootBundle.load(join('lib/assets/database', 'levels_database.db'));
+    print(data);
+    List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    await new File(path).writeAsBytes(bytes, flush: true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +87,7 @@ class _HomeState extends State<Home> {
                             '/game',
                             arguments: GameArguments(
                               users[0].level,
+                              users[0].id,
                             ),
                           );
                         },
